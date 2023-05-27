@@ -1,6 +1,8 @@
 ### CSI parser
 This is a simple CSI parser that only provides parsing for a subset of common CSI.
 
+This repository was inspired by [cansi](https://github.com/kurtlawrence/cansi/tree/master)
+
 If you have additional requirements, feel free to submit a PR (Pull Request)
 
 Please refer to the definition of [CSI.](https://en.wikipedia.org/wiki/ANSI_escape_code#CSI_(Control_Sequence_Introducer)_sequences)
