@@ -2,7 +2,13 @@
 name = "csi_parser"
 description = "CSI escape code parser."
 version = "0.1.0"
+authors = ["YageGeng <icoderdev@outlook.com>"]
 edition = "2021"
+homepage = "https://github.com/GengYage/csi_parser"
+repository = "https://github.com/GengYage/csi_parser"
+readme = "README.md"
+license = "MIT"
+keywords = ["ansi", "csi", "parser", "terminal"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
