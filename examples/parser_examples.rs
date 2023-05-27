@@ -8,5 +8,5 @@ fn main() {
         let csi_seq: CSISequence = x.into();
         csi_seqs.push(csi_seq);
     }
-    println!("{:?}", csi_seqs);
+    println!("{:#?}", csi_seqs);
 }

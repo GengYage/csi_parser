@@ -1,4 +1,4 @@
-//! This is a simple CSI parser that only provides parsing for a subset of common CSIs.
+//! This is a simple CSI parser that only provides parsing for a subset of common CSI.
 //! If you have additional requirements, feel free to submit a PR (Pull Request)
 //!
 //!
