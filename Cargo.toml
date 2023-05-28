@@ -1,7 +1,7 @@
 [package]
 name = "csi_parser"
 description = "CSI escape code parser."
-version = "0.1.0"
+version = "0.1.1"
 authors = ["YageGeng <icoderdev@outlook.com>"]
 edition = "2021"
 homepage = "https://github.com/GengYage/csi_parser"
