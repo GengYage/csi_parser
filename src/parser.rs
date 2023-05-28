@@ -1,5 +1,9 @@
-#[cfg(all(not(feature = "std"), feature = "alloc"))]
+#[cfg(all(not(feature = "std"), feature = "no_std"))]
 use alloc::vec::Vec;
+
+#[cfg(feature = "std")]
+use std::vec::Vec;
+
 use crate::{CSI, SEPARATOR};
 
 /// A match.
@@ -12,7 +16,6 @@ pub struct Match<'t> {
     /// The text slice (ie `text[start..end]`).
     /// Note that the range is `(start..end]`.
     pub csi_text: &'t str,
-    pub original_text: &'t str,
     /// The CSI type (ie `m`, `A` `..`)
     pub csi_type: u8,
 }
@@ -114,7 +117,6 @@ pub fn parse(text: &str) -> Vec<Match> {
                 start,
                 end,
                 csi_text: &text[start..end],
-                original_text: &text[end..text.len()],
                 csi_type: unsafe { (text[(end - 1)..end]).chars().next().unwrap_unchecked() as u8 },
             });
 
@@ -145,14 +147,12 @@ mod tests {
                     start: 7,
                     end: 14,
                     csi_text: "\x1b[31;4m",
-                    original_text: "world\x1b[0m!",
                     csi_type: b'm',
                 },
                 Match {
                     start: 19,
                     end: 23,
                     csi_text: "\x1b[0m",
-                    original_text: "!",
                     csi_type: b'm',
                 },
             ]
@@ -170,14 +170,12 @@ mod tests {
                     start: 6,
                     end: 13,
                     csi_text: "\x1b[31;4m",
-                    original_text: "🌍\x1b[0m!",
                     csi_type: b'm',
                 },
                 Match {
                     start: 17,
                     end: 21,
                     csi_text: "\x1b[0m",
-                    original_text: "!",
                     csi_type: b'm',
                 },
             ]
@@ -195,7 +193,6 @@ mod tests {
                     start: 0,
                     end: 5,
                     csi_text: "\x1b[31A",
-                    original_text: "hello!",
                     csi_type: b'A',
                 },
             ]
@@ -218,7 +215,6 @@ mod tests {
                 start: 4,
                 end: 8,
                 csi_text: "\x1b[0m",
-                original_text: "",
                 csi_type: b'm',
             },
         ]);

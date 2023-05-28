@@ -3,7 +3,7 @@ use core::fmt::{Display, Formatter, Result as DisplayResult};
 use crate::parser::Match;
 
 /// A subset of CSI escape sequences. maybe add more.
-#[derive(Debug, PartialEq, Clone)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 pub enum CSISequence {
     Escape,
     Color(Option<usize>, Option<usize>, Option<usize>),
@@ -20,8 +20,8 @@ pub enum CSISequence {
     ResetAttr(Attr),
 }
 
-impl From<Match<'_>> for CSISequence {
-    fn from(match_data: Match<'_>) -> Self {
+impl From<&Match<'_>> for CSISequence {
+    fn from(match_data: &Match<'_>) -> Self {
         use CSISequence::*;
         let params = match_data.parse_csi();
         match match_data.csi_type {
@@ -246,7 +246,7 @@ mod tests {
 
         let mut csi_seqs = vec![];
         for x in parse(ansi_text) {
-            let csi_seq: CSISequence = x.into();
+            let csi_seq: CSISequence = (&x).into();
             csi_seqs.push(csi_seq);
         }
 
@@ -255,7 +255,7 @@ mod tests {
             vec![
                 Color(None, None, Some(4)),
                 EraseLine(ClearMode::After),
-                EnableAttr(Attr::AutoWrap)
+                EnableAttr(Attr::AutoWrap),
             ]
         );
     }
@@ -266,7 +266,7 @@ mod tests {
 
         let mut csi_seqs = vec![];
         for x in parse(t) {
-            let csi_seq: CSISequence = x.into();
+            let csi_seq: CSISequence = (&x).into();
             csi_seqs.push(csi_seq);
         }
 
@@ -284,7 +284,7 @@ mod tests {
         let t = "\x1b[31Ahello!";
         let mut csi_seqs = vec![];
         for x in parse(t) {
-            let csi_seq: CSISequence = x.into();
+            let csi_seq: CSISequence = (&x).into();
             csi_seqs.push(csi_seq);
         }
 
@@ -300,7 +300,7 @@ mod tests {
     fn malformed_escape() {
         let mut csi_seqs = vec![];
         for x in parse("oops\x1b[\n") {
-            let csi_seq: CSISequence = x.into();
+            let csi_seq: CSISequence = (&x).into();
             csi_seqs.push(csi_seq);
         }
 
@@ -313,7 +313,7 @@ mod tests {
 
         let mut csi_seqs = vec![];
         for m in x {
-            let csi_seq: CSISequence = m.into();
+            let csi_seq: CSISequence = (&m).into();
             csi_seqs.push(csi_seq);
         }
 

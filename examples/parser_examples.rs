@@ -1,12 +1,18 @@
-use csi_parser::enums::CSISequence;
-use csi_parser::parser::parse;
+use csi_parser::iter::{CsiParser, Output};
 
 fn main() {
-    let t = "👋, \x1b[31;4m🌍\x1b[0m!";
-    let mut csi_seqs = vec![];
-    for x in parse(t) {
-        let csi_seq: CSISequence = x.into();
-        csi_seqs.push(csi_seq);
+    let text = "👋, \x1b[31;4m🌍\x1b[0m!";
+
+    let result: Vec<Output> = text.csi_parser().skip(1).collect();
+
+    for out in result {
+        match out {
+            Output::Text(txt) => {
+                println!("{}", txt);
+            }
+            Output::Escape(csi_seq) => {
+                println!("{}", csi_seq);
+            }
+        }
     }
-    println!("{:#?}", csi_seqs);
 }
