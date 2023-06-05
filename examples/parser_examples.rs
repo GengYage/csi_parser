@@ -1,9 +1,9 @@
 use csi_parser::iter::{CsiParser, Output};
 
 fn main() {
-    let text = "👋, \x1b[31;4m🌍\x1b[0m!";
+    let text = "\x1b[31;33;0mFree pages: {}\n\x1b[31m";
 
-    let result: Vec<Output> = text.csi_parser().skip(1).collect();
+    let result: Vec<Output> = text.csi_parser().collect();
 
     for out in result {
         match out {
