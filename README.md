@@ -9,7 +9,7 @@ Please refer to the definition of [CSI.](https://en.wikipedia.org/wiki/ANSI_esca
 
 See the [rs docs.](https://docs.rs/csi_parser/)
 
-Look at progress and contribute on [github.](https://github.com/YageGeng/csi_parser)
+Look at progress and contribute on [github.](https://github.com/GengYage/csi_parser)
 
 ## Example
 ```rust

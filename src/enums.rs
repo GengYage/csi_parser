@@ -37,14 +37,12 @@ impl From<&Match<'_>> for CSISequence {
                         None
                     }
                 });
-                let style = str_to_usize(
-                    if params.len() > 1 {
-                        // 参数数量大于1,必然有属性参数
-                        params.last()
-                    } else {
-                        None
-                    }
-                );
+                let style = str_to_usize(if params.len() > 1 {
+                    // 参数数量大于1,必然有属性参数
+                    params.last()
+                } else {
+                    None
+                });
                 Color(foreground_color, background_color, style)
             }
 
@@ -80,14 +78,10 @@ impl From<&Match<'_>> for CSISequence {
             }
 
             // 保存光标
-            b's' => {
-                CursorSave
-            }
+            b's' => CursorSave,
 
             // 恢复光标
-            b'u' => {
-                CursorRestore
-            }
+            b'u' => CursorRestore,
 
             // 清除屏幕
             b'J' => {
@@ -141,7 +135,6 @@ pub(crate) fn str_to_usize(num_str: Option<&&str>) -> Option<usize> {
     }
 }
 
-
 impl Display for CSISequence {
     /// 不打印0x1B,避免打印被转义
     fn fmt(&self, formatter: &mut Formatter) -> DisplayResult {
@@ -178,14 +171,12 @@ impl From<Option<usize>> for Attr {
     fn from(value: Option<usize>) -> Self {
         match value {
             None => Attr::None,
-            Some(mode) => {
-                match mode {
-                    0 => Attr::None,
-                    25 => Attr::Cursor,
-                    7 => Attr::AutoWrap,
-                    _ => Attr::None,
-                }
-            }
+            Some(mode) => match mode {
+                0 => Attr::None,
+                25 => Attr::Cursor,
+                7 => Attr::AutoWrap,
+                _ => Attr::None,
+            },
         }
     }
 }
@@ -212,14 +203,12 @@ impl From<Option<usize>> for ClearMode {
     fn from(value: Option<usize>) -> Self {
         match value {
             None => ClearMode::After,
-            Some(mode) => {
-                match mode {
-                    0 => ClearMode::After,
-                    1 => ClearMode::Before,
-                    2 => ClearMode::All,
-                    _ => ClearMode::After
-                }
-            }
+            Some(mode) => match mode {
+                0 => ClearMode::After,
+                1 => ClearMode::Before,
+                2 => ClearMode::All,
+                _ => ClearMode::After,
+            },
         }
     }
 }
@@ -236,9 +225,12 @@ impl Display for ClearMode {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(all(not(feature = "std"), feature = "no_std"))]
+    use alloc::vec;
+
+    use super::*;
     use crate::enums::CSISequence::*;
     use crate::parser::parse;
-    use super::*;
 
     #[test]
     fn parse_test() {
@@ -272,10 +264,7 @@ mod tests {
 
         assert_eq!(
             csi_seqs,
-            vec![
-                Color(Some(31), None, Some(4)),
-                Color(Some(0), None, None),
-            ]
+            vec![Color(Some(31), None, Some(4)), Color(Some(0), None, None),]
         );
     }
 
@@ -288,12 +277,7 @@ mod tests {
             csi_seqs.push(csi_seq);
         }
 
-        assert_eq!(
-            csi_seqs,
-            vec![
-                CursorUp(Some(31)),
-            ]
-        );
+        assert_eq!(csi_seqs, vec![CursorUp(Some(31)),]);
     }
 
     #[test]
@@ -317,11 +301,6 @@ mod tests {
             csi_seqs.push(csi_seq);
         }
 
-        assert_eq!(
-            csi_seqs,
-            vec![
-                Color(Some(0), None, None),
-            ]
-        );
+        assert_eq!(csi_seqs, vec![Color(Some(0), None, None),]);
     }
 }

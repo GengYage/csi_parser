@@ -7,15 +7,14 @@
 //! See the [rs docs.](https://docs.rs/csi_parser/)
 //! Look at progress and contribute on [github.](https://github.com/YageGeng/csi_parser)
 
-
 #![cfg_attr(feature = "no_std", no_std)]
 
 #[cfg(all(not(feature = "std"), feature = "no_std"))]
 extern crate alloc;
 
-pub mod parser;
 pub mod enums;
 pub mod iter;
+pub mod parser;
 
 // ESC is 0x1B
 pub(crate) const CSI: &str = "\u{1B}[";

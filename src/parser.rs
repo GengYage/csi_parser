@@ -94,7 +94,8 @@ pub fn parse(text: &str) -> Vec<Match> {
             // get end or CSI seq
             while end < text.len()
                 // 必须是参数字节或者是中间字节
-                && (crate::parameter_byte(byte) || (crate::intermediate_byte(byte))) {
+                && (crate::parameter_byte(byte) || (crate::intermediate_byte(byte)))
+            {
                 // 更新end
                 end += 1;
                 // 更新byte
@@ -135,6 +136,8 @@ pub fn parse(text: &str) -> Vec<Match> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[cfg(all(not(feature = "std"), feature = "no_std"))]
+    use alloc::vec;
 
     #[test]
     fn parse_test() {
@@ -188,14 +191,12 @@ mod tests {
         let parsed = parse(t);
         assert_eq!(
             parsed,
-            vec![
-                Match {
-                    start: 0,
-                    end: 5,
-                    csi_text: "\x1b[31A",
-                    csi_type: b'A',
-                },
-            ]
+            vec![Match {
+                start: 0,
+                end: 5,
+                csi_text: "\x1b[31A",
+                csi_type: b'A',
+            },]
         );
     }
 
@@ -210,13 +211,14 @@ mod tests {
     fn reset_color() {
         let x = parse("oops\x1b[0m");
 
-        assert_eq!(x, vec![
-            Match {
+        assert_eq!(
+            x,
+            vec![Match {
                 start: 4,
                 end: 8,
                 csi_text: "\x1b[0m",
                 csi_type: b'm',
-            },
-        ]);
+            },]
+        );
     }
 }

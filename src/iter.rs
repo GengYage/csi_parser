@@ -47,7 +47,6 @@ impl CsiParser for str {
             matches: Some(parse(self)),
             index: 0,
             index_of_data: 0,
-            done: false,
         }
     }
 }
@@ -65,18 +64,12 @@ pub struct CsiIterator<'a> {
     index: usize,
     // the index of the data
     index_of_data: usize,
-    // 是否完成
-    done: bool,
 }
 
 impl<'a> Iterator for CsiIterator<'a> {
     type Item = Output<'a>;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.done {
-            return None;
-        }
-
         if self.data.is_empty() {
             return None;
         }
@@ -86,29 +79,51 @@ impl<'a> Iterator for CsiIterator<'a> {
             self.matches = Some(parse(self.data));
             self.index = 0;
             self.index_of_data = 0;
-            self.done = false;
         }
 
-        if let Some(matches) = &self.matches {
-            return if self.index < matches.len() && !self.done {
-                let item = &matches[self.index];
-
-                if item.start > self.index_of_data {
-                    // process before csi sequence data
-                    let out = Some(Output::Text(&self.data[self.index_of_data..item.start]));
-                    self.index_of_data = item.start;
-                    out
-                } else {
-                    self.index_of_data = item.end;
-                    // now we can process the next csi sequence
+        if let Some(csi_matches) = &self.matches {
+            // 解析出来的csi序列不存在,则全部是文本
+            if csi_matches.is_empty() {
+                // 用index标识是否遍历完成
+                return if self.index == 0 {
                     self.index += 1;
-                    // process the csi sequence data
-                    Some(Output::Escape(item.into()))
+                    Some(Output::Text(self.data))
+                } else {
+                    None
+                };
+            }
+
+            return if self.index < csi_matches.len() {
+                let csi_item = &csi_matches[self.index];
+
+                // csi seq
+                let index_of_data = self.index_of_data;
+                #[allow(clippy::comparison_chain)]
+                if self.index_of_data < csi_item.start {
+                    self.index_of_data = csi_item.start;
+                    Some(Output::Text(&self.data[index_of_data..csi_item.start]))
+                } else if self.index_of_data == csi_item.start {
+                    self.index_of_data = csi_item.end;
+                    Some(Output::Escape(csi_item.into()))
+                } else {
+                    // data已经遍历完成
+                    if index_of_data >= self.data.len() {
+                        return None;
+                    }
+
+                    self.index += 1;
+                    // 已经是最后一个csi
+                    if self.index >= csi_matches.len() {
+                        return Some(Output::Text(&self.data[index_of_data..]));
+                    }
+
+                    let next = &csi_matches[self.index];
+                    self.index_of_data = next.start;
+
+                    Some(Output::Text(&self.data[index_of_data..next.start]))
                 }
             } else {
-                // 标记完成
-                self.done = true;
-                Some(Output::Text(&self.data[self.index_of_data..]))
+                None
             };
         }
 
@@ -118,6 +133,14 @@ impl<'a> Iterator for CsiIterator<'a> {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(all(not(feature = "std"), feature = "no_std"))]
+    use alloc::vec;
+    #[cfg(all(not(feature = "std"), feature = "no_std"))]
+    use alloc::vec::Vec;
+
+    #[cfg(feature = "std")]
+    use std::vec::Vec;
+
     use super::*;
     use crate::enums::CSISequence::Color;
 
@@ -141,5 +164,66 @@ mod tests {
         let out: Vec<Output> = text.csi_parser().filter(Output::is_text).collect();
 
         assert_eq!(out, vec![Output::Text("hello,world")]);
+    }
+
+    #[test]
+    fn test_iter_1() {
+        let text = "\x1b[31m";
+        let out: Vec<Output> = text.csi_parser().collect();
+
+        assert_eq!(out, vec![Output::Escape(Color(Some(31), None, None))]);
+    }
+
+    #[test]
+    fn test_iter_2() {
+        let text = "hello world";
+        let out: Vec<Output> = text.csi_parser().collect();
+
+        assert_eq!(out, vec![Output::Text("hello world")]);
+    }
+
+    #[test]
+    fn test_iter_3() {
+        let text = "";
+        let out: Vec<Output> = text.csi_parser().collect();
+
+        assert_eq!(out, vec![]);
+    }
+
+    #[test]
+    fn test_iter_4() {
+        let text = " ";
+        let out: Vec<Output> = text.csi_parser().collect();
+
+        assert_eq!(out, vec![Output::Text(" ")]);
+    }
+
+    #[test]
+    fn test_iter_5() {
+        let text = "hello world\x1b[31m";
+        let out: Vec<Output> = text.csi_parser().collect();
+
+        assert_eq!(
+            out,
+            vec![
+                Output::Text("hello world"),
+                Output::Escape(Color(Some(31), None, None))
+            ]
+        );
+    }
+
+    #[test]
+    fn test_iter_6() {
+        let text = "\x1b[mhello world\x1b[31m";
+        let out: Vec<Output> = text.csi_parser().collect();
+
+        assert_eq!(
+            out,
+            vec![
+                Output::Escape(Color(None, None, None)),
+                Output::Text("hello world"),
+                Output::Escape(Color(Some(31), None, None))
+            ]
+        );
     }
 }
